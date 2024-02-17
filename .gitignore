@@ -33,4 +33,4 @@ build/
 .vscode/
 
 ### Http tests ###
-*.http
+endpoints.http
