@@ -11,7 +11,7 @@ players.
 Model the database as an entity-relationship schema meeting the client's requirements. Below are the different entities,
 their attributes, and associations:
 
-![Entity-Relationship Schema](Joueurs/Joueurs.svg)
+![Entity-Relationship Schema](erd/erd.svg)
 
 Assumption
 
