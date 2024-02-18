@@ -1,5 +1,6 @@
 package fr.side.projects.steamnuage.models;
 
+import fr.side.projects.steamnuage.models.idclasses.UnlockId;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "unlocks")
+@IdClass(UnlockId.class)
 public class Unlock {
   @Id
   @ManyToOne

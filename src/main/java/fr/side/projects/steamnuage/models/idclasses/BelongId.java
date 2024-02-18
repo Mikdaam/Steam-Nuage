@@ -8,6 +8,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Data
 public class BelongId implements Serializable {
-  private Long idGame;
+  private Long game;
   private String genre;
 }

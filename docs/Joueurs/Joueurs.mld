@@ -1,0 +1,31 @@
+%%mocodo
+:
+ENTREPRISE: id_entreprise, nom, pays
+:::
+AVIS: #pseudo->JOUEUR->pseudo, _#id_jeux->JEUX->id_jeux, note, commentaire
+:
+EST AMI(E): #pseudo->JOUEUR->pseudo, _#pseudo.1->JOUEUR->pseudo
+:::
+
+
+:::
+JEUX: id_jeux, titre, date_sortie, prix, age_requis, description_jeux, #id_entreprise->ENTREPRISE->id_entreprise, #id_entreprise.1->ENTREPRISE->id_entreprise
+:
+PARTAGER: #pseudo->JOUEUR->pseudo, _#id_jeux->JEUX->id_jeux, _#pseudo.1->JOUEUR->pseudo
+:
+JOUEUR: pseudo, passwd, nom, adress_mail, date_naissance, monnaie
+:
+DEBLOQUE: #num_succes->SUCCES->num_succes, _#pseudo->JOUEUR->pseudo, date
+:
+
+
+:::::
+ACHAT: #id_jeux->JEUX->id_jeux, _#pseudo->JOUEUR->pseudo
+:::::
+
+
+::
+APPARTIENT: #id_jeux->JEUX->id_jeux, _type
+:::
+SUCCES: num_succes, intitule, conditions, #id_jeux->JEUX->id_jeux
+:::

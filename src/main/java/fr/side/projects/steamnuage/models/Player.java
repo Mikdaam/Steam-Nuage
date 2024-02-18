@@ -1,5 +1,6 @@
 package fr.side.projects.steamnuage.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -7,7 +8,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -24,7 +25,8 @@ public class Player {
 	private String emailAddress;
 
 	@Column(name = "date_of_birth")
-	private LocalDateTime dateOfBirth;
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	private LocalDate dateOfBirth;
 
 	@Column(name = "currency", columnDefinition = "int default 0")
 	private int currency;

@@ -6,6 +6,6 @@ import java.io.Serializable;
 
 @Data
 public class LoanId implements Serializable {
-  private Long idGame;
-  private String usernameLender;
+  private Long game;
+  private String lender;
 }

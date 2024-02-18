@@ -6,6 +6,6 @@ import java.io.Serializable;
 
 @Data
 public class ReviewId implements Serializable {
-  private String username;
-  private Long idGame;
+  private String player;
+  private Long game;
 }

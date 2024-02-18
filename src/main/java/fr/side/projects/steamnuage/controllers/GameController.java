@@ -3,10 +3,12 @@ package fr.side.projects.steamnuage.controllers;
 import fr.side.projects.steamnuage.controllers.dto.GameRequest;
 import fr.side.projects.steamnuage.controllers.dto.GameResponse;
 import fr.side.projects.steamnuage.mappers.GameMapper;
+import fr.side.projects.steamnuage.models.Achievement;
 import fr.side.projects.steamnuage.models.Review;
-import fr.side.projects.steamnuage.repositories.CompanyRepository;
-import fr.side.projects.steamnuage.repositories.GameRepository;
+import fr.side.projects.steamnuage.services.AchievementService;
+import fr.side.projects.steamnuage.services.CompanyService;
 import fr.side.projects.steamnuage.services.GameService;
+import fr.side.projects.steamnuage.services.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,10 @@ import java.util.Objects;
 @RequestMapping("/steam-api/games")
 public class GameController {
 	private final GameService gameService;
+	private final CompanyService companyService;
+	private final ReviewService reviewService;
+	private final AchievementService achievementService;
 	private final GameMapper gameMapper;
-	private final GameRepository gameRepository;
-	private final CompanyRepository companyRepository;
 
 	@GetMapping
 	public ResponseEntity<List<GameResponse>> getGames(
@@ -31,42 +34,38 @@ public class GameController {
 			@RequestParam(name = "published_by", required = false) String publishedBy,
 			@RequestParam(name = "developed_by", required = false) String developedBy)
 	{
-		return ResponseEntity.ok(List.of());
+		return ResponseEntity.ok(gameService.getGames().stream()
+				.map(gameMapper::toGameResponse)
+				.toList());
 	}
 
 	@GetMapping("/{gameId}")
 	public GameResponse getGame(@PathVariable Long gameId) {
-		return gameMapper.toGameResponse(gameService.validateAndGetGame(gameId));
+		return gameMapper.toGameResponse(gameService.findGameById(gameId));
 	}
 
 	@ResponseStatus(HttpStatus.CREATED)
 	@PostMapping
 	public ResponseEntity<GameResponse> addGame(@Valid @RequestBody GameRequest gameRequest) {
 		var game = gameMapper.toGame(gameRequest);
+		Objects.requireNonNull(game);
+
 		// Check if the developer and publisher exist, if not, save them
-		var developer = companyRepository.findByName(gameRequest.developedBy().name());
-		if (developer == null) {
-			developer = companyRepository.save(gameMapper.toCompany(gameRequest.developedBy()));
-		}
-		var publisher = companyRepository.findByName(gameRequest.publishedBy().name());
-		if (publisher == null) {
-			publisher = companyRepository.save(gameMapper.toCompany(gameRequest.publishedBy()));
-		}
+		var developer = companyService.saveIfNotExist(game.getDeveloper());
+		var publisher = companyService.saveIfNotExist(game.getPublisher());
 
 		game.setDeveloper(developer);
 		game.setPublisher(publisher);
 
 		// then save game
-		var savedGame = gameRepository.save(game);
-		return ResponseEntity.ok(gameMapper.toGameResponse(savedGame));
+		return ResponseEntity.ok(gameMapper.toGameResponse(gameService.saveGame(game)));
 	}
 
 	@PatchMapping("/{gameId}")
 	public ResponseEntity<GameResponse> updateGame(@PathVariable Long gameId, @RequestBody GameRequest updateRequest) {
 		Objects.requireNonNull(updateRequest);
-		var game = gameService.validateAndGetGame(gameId);
 		var update = gameMapper.toGame(updateRequest);
-		game.update(update);
+		var game = gameService.updateGame(gameId, update);
 		return ResponseEntity.ok(gameMapper.toGameResponse(game));
 	}
 
@@ -78,7 +77,9 @@ public class GameController {
 
 	@GetMapping("/{gameId}/reviews")
 	public ResponseEntity<List<Review>> getGameReviews(@PathVariable Long gameId) {
-		return ResponseEntity.ok(List.of());
+		var game = gameService.findGameById(gameId);
+		var reviews = reviewService.getReviewsByGame(game);
+		return ResponseEntity.ok(reviews);
 	}
 
 	@PostMapping("/{gameId}/add-review")
@@ -87,7 +88,9 @@ public class GameController {
 	}
 
 	@GetMapping("/{gameId}/achievements")
-	public ResponseEntity<List<Review>> getGameSuccess(@PathVariable Long gameId) {
-		return ResponseEntity.noContent().build();
+	public ResponseEntity<List<Achievement>> getGameSuccess(@PathVariable Long gameId) {
+		var game = gameService.findGameById(gameId);
+		var achievements = achievementService.getAchievementsByGame(game);
+		return ResponseEntity.ok(achievements);
 	}
 }

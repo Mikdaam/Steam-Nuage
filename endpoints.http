@@ -43,3 +43,9 @@ Content-Type:  application/json
     "country": "USA"
   }
 }
+
+### Get Assasin Creed reviews
+GET http://localhost:8080/steam-api/games/2/reviews
+
+### Get Assassin's Creed achievements
+GET http://localhost:8080/steam-api/games/2/achievements

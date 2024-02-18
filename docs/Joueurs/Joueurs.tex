@@ -1,0 +1,26 @@
+% Copy this before \begin{document}
+
+\usepackage[normalem]{ulem}
+\newenvironment{mld}
+  {\par\begin{minipage}{\linewidth}\begin{tabular}{rp{0.7\linewidth}}}
+  {\end{tabular}\end{minipage}\par}
+\newcommand{\relat}[1]{\textsc{#1}}
+\newcommand{\attr}[1]{\emph{#1}}
+\newcommand{\prim}[1]{\uline{#1}}
+\newcommand{\foreign}[1]{\#\textsl{#1}}
+
+% Copy that after \begin{document}
+
+\begin{mld}
+  Entreprise & (\prim{id\_entreprise}, \attr{nom}, \attr{pays})\\
+  Avis & (\foreign{\prim{pseudo}}, \foreign{\prim{id\_jeux}}, \attr{note}, \attr{commentaire})\\
+  Est ami(e) & (\foreign{\prim{pseudo}}, \foreign{\prim{pseudo.1}})\\
+  Jeux & (\prim{id\_jeux}, \attr{titre}, \attr{date\_sortie}, \attr{prix}, \attr{age\_requis}, \attr{description\_jeux}, \foreign{id\_entreprise}, \foreign{id\_entreprise.1})\\
+  Partager & (\foreign{\prim{pseudo}}, \foreign{\prim{id\_jeux}}, \foreign{\prim{pseudo.1}})\\
+  Joueur & (\prim{pseudo}, \attr{passwd}, \attr{nom}, \attr{adress\_mail}, \attr{date\_naissance}, \attr{monnaie})\\
+  Debloque & (\foreign{\prim{num\_succes}}, \foreign{\prim{pseudo}}, \attr{date})\\
+  Achat & (\foreign{\prim{id\_jeux}}, \foreign{\prim{pseudo}})\\
+% Genre & (\prim{type})\\
+  Appartient & (\foreign{\prim{id\_jeux}}, \foreign{\prim{type}})\\
+  Succes & (\prim{num\_succes}, \attr{intitule}, \attr{conditions}, \foreign{id\_jeux})\\
+\end{mld}

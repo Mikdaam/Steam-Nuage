@@ -1,11 +1,13 @@
 package fr.side.projects.steamnuage.models;
 
+import fr.side.projects.steamnuage.models.idclasses.ReviewId;
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity
 @Table(name = "reviews")
+@IdClass(ReviewId.class)
 public class Review {
 	@Id
 	@ManyToOne
