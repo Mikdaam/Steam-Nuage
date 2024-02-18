@@ -1,0 +1,45 @@
+###
+GET http://localhost:8080/steam-api/games
+
+###
+GET http://localhost:8080/steam-api/games/2
+
+### Add Fifa
+POST http://localhost:8080/steam-api/games
+Content-Type:  application/json
+
+{
+  "title": "FIFA 22",
+  "description": "Football simulation game.",
+  "price": 5999,
+  "minimumAge": 3,
+  "releaseDate": "2021-10-01",
+  "developedBy": {
+    "name": "EA",
+    "country": "USA"
+  },
+  "publishedBy": {
+    "name": "EA",
+    "country": "USA"
+  }
+}
+
+### Add Fortnite
+POST http://localhost:8080/steam-api/games
+Content-Type:  application/json
+
+{
+  "title": "Fortnite",
+  "description": "Battle Royale.",
+  "price": 0,
+  "minimumAge": 12,
+  "releaseDate": "2017-07-25",
+  "developedBy": {
+    "name": "Epic Games",
+    "country": "USA"
+  },
+  "publishedBy": {
+    "name": "Epic Games",
+    "country": "USA"
+  }
+}
