@@ -6,11 +6,45 @@ import fr.side.projects.steamnuage.controllers.dto.GameRequest;
 import fr.side.projects.steamnuage.controllers.dto.GameResponse;
 import fr.side.projects.steamnuage.models.Company;
 import fr.side.projects.steamnuage.models.Game;
+import org.springframework.stereotype.Service;
 
-public interface GameMapper {
-	GameResponse toGameResponse(Game game);
-	Game toGame(GameRequest gameRequest);
+import java.util.Objects;
 
-	CompanyResponse toCompanyResponse(Company company);
-	Company toCompany(CompanyRequest companyRequest);
+@Service
+public class GameMapper {
+	public GameResponse toGameResponse(Game game) {
+		Objects.requireNonNull(game, "Game can't be null");
+		return new GameResponse(
+				game.getId(),
+				game.getTitle(),
+				game.getDescription(),
+				game.getPrice(),
+				game.getMinimumAge(),
+				game.getReleaseDate(),
+				toCompanyResponse(game.getDeveloper()),
+				toCompanyResponse(game.getPublisher())
+		);
+	}
+
+	public Game toGame(GameRequest gameRequest) {
+		Objects.requireNonNull(gameRequest, "GameRequest can't be null");
+		return new Game(
+				gameRequest.title(),
+				gameRequest.description(),
+				gameRequest.price(),
+				gameRequest.minimumAge(),
+				gameRequest.releaseDate(),
+				toCompany(gameRequest.developedBy()),
+				toCompany(gameRequest.publishedBy()));
+	}
+
+	public CompanyResponse toCompanyResponse(Company company) {
+		Objects.requireNonNull(company, "Company can't be null");
+		return new CompanyResponse(company.getName(), company.getCountry());
+	}
+
+	public Company toCompany(CompanyRequest companyRequest) {
+		Objects.requireNonNull(companyRequest, "CompanyRequest can't be null");
+		return new Company(companyRequest.name(), companyRequest.country());
+	}
 }

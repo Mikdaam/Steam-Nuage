@@ -21,7 +21,7 @@ public class Player {
 	private String password;
 	private String fullName;
 
-	@Column(name = "email_address", nullable = false)
+  @Column(name = "email_address", nullable = false, unique = true)
 	private String emailAddress;
 
 	@Column(name = "date_of_birth")

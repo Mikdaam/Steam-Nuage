@@ -49,3 +49,9 @@ GET http://localhost:8080/steam-api/games/2/reviews
 
 ### Get Assassin's Creed achievements
 GET http://localhost:8080/steam-api/games/2/achievements
+
+### Lister tous les joueurs
+GET http://localhost:8080/steam-api/players
+
+### Recuperer un joueur
+GET http://localhost:8080/steam-api/players/gamefan10
