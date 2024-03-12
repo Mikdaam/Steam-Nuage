@@ -11,6 +11,7 @@ public class PlayerMapper {
   public PlayerResponse toPlayerResponse(Player player) {
     Objects.requireNonNull(player, "Player can't be null");
     return new PlayerResponse(
+        player.getId(),
         player.getUsername(),
         player.getFullName(),
         player.getEmailAddress()
