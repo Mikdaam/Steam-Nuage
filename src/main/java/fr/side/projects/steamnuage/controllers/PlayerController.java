@@ -30,7 +30,7 @@ public class PlayerController {
   private final PlayerService playerService;
 
   @GetMapping("")
-  public ResponseEntity<List<PlayerResponse>> getPlayers() {
+  public ResponseEntity<List<PlayerResponse>> listPlayers() {
     return ResponseEntity.ok(playerService.retrievesAll().stream()
         .map(PlayerResponse::from)
         .toList()
@@ -38,19 +38,19 @@ public class PlayerController {
   }
 
   @GetMapping("/{playerId}")
-  public ResponseEntity<PlayerResponse> getPlayer(@PathVariable @Min(1) Long playerId) {
+  public ResponseEntity<PlayerResponse> getPlayerById(@PathVariable @Min(1) long playerId) {
     var res = playerService.retrieveOne(playerId)
         .orElseThrow(() -> new ResourceNotFoundException("Player " + playerId + " not found."));
     return ResponseEntity.ok(PlayerResponse.from(res));
   }
 
   @PostMapping("")
-  public ResponseEntity<PlayerResponse> addGame(@RequestBody @Valid GameRequest gameRequest) {
+  public ResponseEntity<PlayerResponse> createPlayer(@RequestBody @Valid GameRequest gameRequest) {
     return ResponseEntity.ok(null);
   }
 
   @PatchMapping("/{playerId}")
-  public ResponseEntity<PlayerResponse> updateGame(
+  public ResponseEntity<PlayerResponse> updatePlayerById(
       @PathVariable @Min(1) long playerId,
       @RequestBody GameRequest updateRequest
   ) {
@@ -59,7 +59,7 @@ public class PlayerController {
   }
 
   @DeleteMapping("/{playerId}")
-  public ResponseEntity<Void> deleteGame(@PathVariable @Min(1) long playerId) {
+  public ResponseEntity<Void> deletePlayerById(@PathVariable @Min(1) long playerId) {
     playerService.deletePlayer(playerId);
     return ResponseEntity.noContent().build();
   }
