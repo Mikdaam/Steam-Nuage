@@ -17,4 +17,9 @@ public class CompanyService {
     return companyRepository.findById(company.getName())
         .orElseGet(() -> companyRepository.save(company));
   }
+
+  public Company save(Company company) {
+    Objects.requireNonNull(company);
+    return companyRepository.save(company);
+  }
 }
