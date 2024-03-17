@@ -1,4 +1,4 @@
-package fr.side.projects.steamnuage.exceptions;
+package fr.side.projects.steamnuage.controllers.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
