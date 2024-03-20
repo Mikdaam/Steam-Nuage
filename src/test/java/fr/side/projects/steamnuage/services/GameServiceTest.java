@@ -44,7 +44,7 @@ class GameServiceTest {
     var results = service.retrieveAll();
 
     assertNotNull(results);
-    assertEquals(1, results.size());
+    assertEquals(2, results.size());
     verify(repository, times(1)).findAll();
   }
 
