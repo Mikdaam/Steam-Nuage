@@ -26,11 +26,11 @@ public class PlayerService {
     return playerRepository.save(player);
   }
 
-  public void deletePlayer(long playerId) {
-    playerRepository.deleteById(playerId);
-  }
-
   public Player updatePlayer(long playerId, Player update) {
     return playerRepository.findById(playerId).orElseThrow(() -> new ResourceNotFoundException("Not Found"));
+  }
+
+  public void deletePlayer(long playerId) {
+    playerRepository.deleteById(playerId);
   }
 }
