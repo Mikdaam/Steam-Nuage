@@ -43,24 +43,24 @@ class PlayerServiceTest {
   @Test
   void testRetrieveOneExists() {
     var expectedPlayer = new Player();
-    when(repository.findById(1L)).thenReturn(Optional.of(expectedPlayer));
+    when(repository.findById("username")).thenReturn(Optional.of(expectedPlayer));
 
-    var result = service.retrieveOne(1L).orElseThrow();
+    var result = service.retrieveOne("username").orElseThrow();
 
     assertNotNull(result);
     assertEquals(expectedPlayer, result);
-    verify(repository, times(1)).findById(1L);
+    verify(repository, times(1)).findById("username");
   }
 
   @Test
   void testRetrieveOneNotExists() {
-    when(repository.findById(2L)).thenReturn(Optional.empty());
+    when(repository.findById("2L")).thenReturn(Optional.empty());
 
-    var result = service.retrieveOne(2L);
+    var result = service.retrieveOne("2L");
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
-    verify(repository, times(1)).findById(2L);
+    verify(repository, times(1)).findById("2L");
   }
 
   @Test
@@ -77,10 +77,10 @@ class PlayerServiceTest {
 
   @Test
   void testDeleteGame() {
-    doNothing().when(repository).deleteById(1L);
+    doNothing().when(repository).deleteById("1L");
 
-    service.deletePlayer(1L);
+    service.deletePlayer("1L");
 
-    verify(repository, times(1)).deleteById(1L);
+    verify(repository, times(1)).deleteById("1L");
   }
 }
