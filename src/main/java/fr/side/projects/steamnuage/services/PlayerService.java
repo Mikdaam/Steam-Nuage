@@ -18,19 +18,19 @@ public class PlayerService {
     return playerRepository.findAll();
   }
 
-  public Optional<Player> retrieveOne(long playerId) {
-    return playerRepository.findById(playerId);
+  public Optional<Player> retrieveOne(String username) {
+    return playerRepository.findById(username);
   }
 
   public Player savePlayer(Player player) {
     return playerRepository.save(player);
   }
 
-  public Player updatePlayer(long playerId, Player update) {
-    return playerRepository.findById(playerId).orElseThrow(() -> new ResourceNotFoundException("Not Found"));
+  public Player updatePlayer(String username, Player update) {
+    return playerRepository.findById(username).orElseThrow(() -> new ResourceNotFoundException("Not Found"));
   }
 
-  public void deletePlayer(long playerId) {
-    playerRepository.deleteById(playerId);
+  public void deletePlayer(String username) {
+    playerRepository.deleteById(username);
   }
 }

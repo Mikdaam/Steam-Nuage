@@ -7,7 +7,6 @@ import fr.side.projects.steamnuage.models.Game;
 import fr.side.projects.steamnuage.models.Review;
 import fr.side.projects.steamnuage.services.PlayerService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,10 +36,10 @@ public class PlayerController {
     );
   }
 
-  @GetMapping("/{playerId}")
-  public ResponseEntity<PlayerResponse> getPlayerById(@PathVariable @Min(1) long playerId) {
-    var res = playerService.retrieveOne(playerId)
-        .orElseThrow(() -> new ResourceNotFoundException("Player " + playerId + " not found."));
+  @GetMapping("/{username}")
+  public ResponseEntity<PlayerResponse> getPlayerById(@PathVariable String username) {
+    var res = playerService.retrieveOne(username)
+        .orElseThrow(() -> new ResourceNotFoundException("Player " + username + " not found."));
     return ResponseEntity.ok(PlayerResponse.from(res));
   }
 
@@ -49,42 +48,42 @@ public class PlayerController {
     return ResponseEntity.ok(null);
   }
 
-  @PatchMapping("/{playerId}")
+  @PatchMapping("/{username}")
   public ResponseEntity<PlayerResponse> updatePlayerById(
-      @PathVariable @Min(1) long playerId,
+      @PathVariable String username,
       @RequestBody GameRequest updateRequest
   ) {
     Objects.requireNonNull(updateRequest);
     return ResponseEntity.ok(null);
   }
 
-  @DeleteMapping("/{playerId}")
-  public ResponseEntity<Void> deletePlayerById(@PathVariable @Min(1) long playerId) {
-    playerService.deletePlayer(playerId);
+  @DeleteMapping("/{username}")
+  public ResponseEntity<Void> deletePlayerById(@PathVariable String username) {
+    playerService.deletePlayer(username);
     return ResponseEntity.noContent().build();
   }
 
-  @GetMapping("/{playerId}/friends")
-  public ResponseEntity<List<PlayerResponse>> getPlayerFriends(@PathVariable @Min(1) long playerId) {
+  @GetMapping("/{username}/friends")
+  public ResponseEntity<List<PlayerResponse>> getPlayerFriends(@PathVariable String username) {
     return ResponseEntity.ok(List.of());
   }
 
-  @GetMapping("/{playerId}/games")
+  @GetMapping("/{username}/games")
   public ResponseEntity<List<Game>> getPlayerGames(
-      @PathVariable @Min(1) long playerId,
+      @PathVariable String username,
       @RequestParam(name = "lent", required = false) String lent,
       @RequestParam(name = "borrowed", required = false) String borrowed
   ) {
     return ResponseEntity.ok(List.of());
   }
 
-  @GetMapping("/{playerId}/reviews")
-  public ResponseEntity<List<Review>> getPlayerReviews(@PathVariable @Min(1) long playerId) {
+  @GetMapping("/{username}/reviews")
+  public ResponseEntity<List<Review>> getPlayerReviews(@PathVariable String username) {
     return ResponseEntity.ok(List.of());
   }
 
-  @GetMapping("/{playerId}/progresses")
-  public ResponseEntity<Game> getPlayerGeneralProgress(@PathVariable @Min(1) long playerId) {
+  @GetMapping("/{username}/progresses")
+  public ResponseEntity<Game> getPlayerGeneralProgress(@PathVariable String username) {
     return ResponseEntity.ok(null);
   }
 }
