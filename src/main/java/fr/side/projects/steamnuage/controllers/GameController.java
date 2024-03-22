@@ -2,14 +2,18 @@ package fr.side.projects.steamnuage.controllers;
 
 import fr.side.projects.steamnuage.controllers.exception.ResourceNotFoundException;
 import fr.side.projects.steamnuage.controllers.request.GameRequest;
-import fr.side.projects.steamnuage.controllers.response.GameResponse;
-import fr.side.projects.steamnuage.models.Achievement;
-import fr.side.projects.steamnuage.models.Company;
+import fr.side.projects.steamnuage.controllers.request.ReviewRequest;
+import fr.side.projects.steamnuage.controllers.response.AchievementResponse;
+import fr.side.projects.steamnuage.controllers.response.GameDetailsResponse;
+import fr.side.projects.steamnuage.controllers.response.GameReviewsResponse;
+import fr.side.projects.steamnuage.controllers.response.GameSummaryResponse;
+import fr.side.projects.steamnuage.controllers.response.ReviewResponse;
 import fr.side.projects.steamnuage.models.Game;
 import fr.side.projects.steamnuage.models.Review;
 import fr.side.projects.steamnuage.services.AchievementService;
 import fr.side.projects.steamnuage.services.CompanyService;
 import fr.side.projects.steamnuage.services.GameService;
+import fr.side.projects.steamnuage.services.PlayerService;
 import fr.side.projects.steamnuage.services.ReviewService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,7 +28,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -38,39 +41,43 @@ public class GameController {
 	private final CompanyService companyService;
 	private final ReviewService reviewService;
 	private final AchievementService achievementService;
+	private final PlayerService playerService;
 
 	@GetMapping
-	public ResponseEntity<List<GameResponse>> listGames(
+	public ResponseEntity<List<GameSummaryResponse>> listGames(
 			@RequestParam(name = "category", required = false) String category,
 			@RequestParam(name = "published_by", required = false) String publishedBy,
 			@RequestParam(name = "developed_by", required = false) String developedBy
 	) {
-		return ResponseEntity.ok(gameService.retrieveAll().stream()
-				.map(GameResponse::from)
-				.toList());
+		var games = gameService.retrieveAll();
+		var res = games.stream()
+				.map(reviewService::getReviewsByGame)
+				.map(GameSummaryResponse::from)
+				.toList();
+
+		return ResponseEntity.ok(res);
 	}
 
 	@GetMapping("/{gameId}")
-	public ResponseEntity<GameResponse> getGameById(@PathVariable @Min(1) long gameId) {
-		return gameService.retrieveOne(gameId)
-				.map(GameResponse::from)
-				.map(ResponseEntity::ok)
+	public ResponseEntity<GameDetailsResponse> getGameById(@PathVariable @Min(1) long gameId) {
+		var game = gameService.retrieveOne(gameId)
 				.orElseThrow(() -> new ResourceNotFoundException("Game not found"));
+
+		var gameReviews = reviewService.getReviewsByGame(game);
+		var gameAchievements = achievementService.getAchievementsByGame(game);
+
+		var res = GameDetailsResponse.from(gameReviews, gameAchievements);
+
+		return ResponseEntity.ok(res);
 	}
 
-	@ResponseStatus(HttpStatus.CREATED)
+	// =================== For Admin User [Not Implemented] =======================
 	@PostMapping
-	public ResponseEntity<GameResponse> createGame(@RequestBody @Valid GameRequest gameRequest) {
+	public ResponseEntity<GameSummaryResponse> createGame(@RequestBody @Valid GameRequest gameRequest) {
 		Objects.requireNonNull(gameRequest);
-		var dev = Company.builder()
-				.name(gameRequest.developedBy().name())
-				.country(gameRequest.publishedBy().country())
-				.build();
 
-		var pub = Company.builder()
-				.name(gameRequest.publishedBy().name())
-				.country(gameRequest.publishedBy().country())
-				.build();
+		var developer = companyService.saveIfNotExist(gameRequest.developedBy());
+		var publisher = companyService.saveIfNotExist(gameRequest.publishedBy());
 
 		var game = Game.builder()
 				.title(gameRequest.title())
@@ -78,46 +85,27 @@ public class GameController {
 				.price(gameRequest.price())
 				.minimumAge(gameRequest.minimumAge())
 				.releaseDate(gameRequest.releaseDate())
-				.developer(dev)
-				.publisher(pub)
+				.developer(developer)
+				.publisher(publisher)
 				.build();
 
-		var developer = companyService.saveIfNotExist(game.getDeveloper());
-		var publisher = companyService.saveIfNotExist(game.getPublisher());
-
-		game.setDeveloper(developer);
-		game.setPublisher(publisher);
-
-		var res = gameService.saveGame(game);
-		return ResponseEntity.ok(GameResponse.from(res));
+		var saved = gameService.saveGame(game);
+		var reviews = reviewService.getReviewsByGame(saved);
+		return ResponseEntity.status(HttpStatus.CREATED).body(GameSummaryResponse.from(reviews));
 	}
 
 	@PatchMapping("/{gameId}")
-	public ResponseEntity<GameResponse> updateGameById(@PathVariable @Min(1) long gameId, @RequestBody @Valid GameRequest updateRequest) {
+	public ResponseEntity<GameSummaryResponse> updateGameById(@PathVariable @Min(1) long gameId, @RequestBody @Valid GameRequest updateRequest) {
 		Objects.requireNonNull(updateRequest);
-		var existingGame = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Not Found"));
 
-		var updatedDeveloper = existingGame.getDeveloper();
-		updatedDeveloper.setName(updateRequest.developedBy().name());
-		updatedDeveloper.setCountry(updateRequest.developedBy().country());
-		updatedDeveloper = companyService.save(updatedDeveloper);
+		var developer = companyService.saveIfNotExist(updateRequest.developedBy());
+		var publisher = companyService.saveIfNotExist(updateRequest.publishedBy());
 
-		var updatedPublisher = existingGame.getPublisher();
-		updatedPublisher.setName(updateRequest.publishedBy().name());
-		updatedPublisher.setCountry(updateRequest.publishedBy().country());
-		updatedPublisher = companyService.save(updatedPublisher);
-
-		existingGame.setTitle(updateRequest.title());
-		existingGame.setDescription(updateRequest.description());
-		existingGame.setPrice(updateRequest.price());
-		existingGame.setMinimumAge(updateRequest.minimumAge());
-		existingGame.setReleaseDate(updateRequest.releaseDate());
-		existingGame.setPublisher(updatedDeveloper);
-		existingGame.setPublisher(updatedPublisher);
-
-		var res = gameService.saveGame(existingGame);
-		return ResponseEntity.ok(GameResponse.from(res));
+		var updated = gameService.updateGame(gameId, updateRequest, developer, publisher);
+		var reviews = reviewService.getReviewsByGame(updated);
+		return ResponseEntity.ok(GameSummaryResponse.from(reviews));
 	}
+	// ================================================================
 
 	@DeleteMapping("/{gameId}")
 	public ResponseEntity<Void> deleteGameById(@PathVariable @Min(1) long gameId) {
@@ -126,23 +114,52 @@ public class GameController {
 	}
 
 	@GetMapping("/{gameId}/reviews")
-	public ResponseEntity<List<Review>> listGameReviews(@PathVariable @Min(1) long gameId) {
+	public ResponseEntity<GameReviewsResponse> listGameReviews(@PathVariable @Min(1) long gameId) {
 		var game = gameService.retrieveOne(gameId)
 				.orElseThrow(() -> new ResourceNotFoundException("Not Found"));
 		var reviews = reviewService.getReviewsByGame(game);
-		return ResponseEntity.ok(reviews);
+		var res = GameReviewsResponse.from(reviews);
+		return ResponseEntity.ok(res);
 	}
 
-	@PostMapping("/{gameId}/add-review")
-	public ResponseEntity<Void> addGameReview(@PathVariable @Min(1) long gameId) {
-		return ResponseEntity.noContent().build();
+	@PostMapping("/{gameId}/reviews")
+	public ResponseEntity<ReviewResponse> addGameReview(@PathVariable @Min(1) long gameId, @RequestBody @Valid ReviewRequest reviewRequest) {
+		Objects.requireNonNull(reviewRequest);
+
+		var game = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Game Found"));
+		var player = playerService.retrieveOne(reviewRequest.username()).orElseThrow(() -> new ResourceNotFoundException("Player not Found."));
+		var review = Review.builder()
+				.player(player)
+				.game(game)
+				.rating(reviewRequest.rating())
+				.comment(reviewRequest.comment())
+				.build();
+		var savedReview = reviewService.saveReview(review);
+		return ResponseEntity.status(HttpStatus.CREATED).body(ReviewResponse.from(savedReview));
+	}
+
+	@PatchMapping("/{gameId}/reviews")
+	public ResponseEntity<ReviewResponse> updateGameReview(@PathVariable @Min(1) long gameId, @RequestBody @Valid ReviewRequest reviewRequest) {
+		Objects.requireNonNull(reviewRequest);
+
+		var game = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Game Found"));
+		var player = playerService.retrieveOne(reviewRequest.username()).orElseThrow(() -> new ResourceNotFoundException("Player not Found."));
+		var reviewUpdate = Review.builder()
+				.player(player)
+				.game(game)
+				.rating(reviewRequest.rating())
+				.comment(reviewRequest.comment())
+				.build();
+		var updatedReview = reviewService.updateReview(reviewUpdate);
+		return ResponseEntity.ok(ReviewResponse.from(updatedReview));
 	}
 
 	@GetMapping("/{gameId}/achievements")
-	public ResponseEntity<List<Achievement>> listGameAchievements(@PathVariable @Min(1) long gameId) {
+	public ResponseEntity<List<AchievementResponse>> listGameAchievements(@PathVariable @Min(1) long gameId) {
 		var game = gameService.retrieveOne(gameId)
 				.orElseThrow(() -> new ResourceNotFoundException("Not Found"));
 		var achievements = achievementService.getAchievementsByGame(game);
-		return ResponseEntity.ok(achievements);
+		var res = achievements.stream().map(AchievementResponse::from).toList();
+		return ResponseEntity.ok(res);
 	}
 }
