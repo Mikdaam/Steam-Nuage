@@ -32,7 +32,6 @@ public class GameService {
 	public Game updateGame(long gameId, GameRequest gameUpdate, Company developer, Company publisher) {
 		Objects.requireNonNull(gameUpdate);
 
-		// This doesn't update the publisher and developer.
 		return gameRepository.findById(gameId)
 				.map(existingGame -> {
 					existingGame.setTitle(gameUpdate.title());
@@ -44,7 +43,7 @@ public class GameService {
 					existingGame.setPublisher(publisher);
 					return gameRepository.save(existingGame);
 				})
-				.orElseThrow(() -> new ResourceNotFoundException("Game not Found"));
+        .orElseThrow(() -> new ResourceNotFoundException("Game not found"));
 	}
 
   public void deleteGame(Long id) {

@@ -49,8 +49,7 @@ public class GameController {
 			@RequestParam(name = "published_by", required = false) String publishedBy,
 			@RequestParam(name = "developed_by", required = false) String developedBy
 	) {
-		var games = gameService.retrieveAll();
-		var res = games.stream()
+		var res = gameService.retrieveAll().stream()
 				.map(reviewService::getReviewsByGame)
 				.map(GameSummaryResponse::from)
 				.toList();
