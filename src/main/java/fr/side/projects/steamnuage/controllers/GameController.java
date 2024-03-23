@@ -126,7 +126,7 @@ public class GameController {
 	public ResponseEntity<ReviewResponse> addGameReview(@PathVariable @Min(1) long gameId, @RequestBody @Valid ReviewRequest reviewRequest) {
 		Objects.requireNonNull(reviewRequest);
 
-		var game = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Game Found"));
+		var game = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Game not found"));
 		var player = playerService.retrieveOne(reviewRequest.username()).orElseThrow(() -> new ResourceNotFoundException("Player not Found."));
 		var review = Review.builder()
 				.player(player)
@@ -142,15 +142,10 @@ public class GameController {
 	public ResponseEntity<ReviewResponse> updateGameReview(@PathVariable @Min(1) long gameId, @RequestBody @Valid ReviewRequest reviewRequest) {
 		Objects.requireNonNull(reviewRequest);
 
-		var game = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Game Found"));
+		var game = gameService.retrieveOne(gameId).orElseThrow(() -> new ResourceNotFoundException("Game not found"));
 		var player = playerService.retrieveOne(reviewRequest.username()).orElseThrow(() -> new ResourceNotFoundException("Player not Found."));
-		var reviewUpdate = Review.builder()
-				.player(player)
-				.game(game)
-				.rating(reviewRequest.rating())
-				.comment(reviewRequest.comment())
-				.build();
-		var updatedReview = reviewService.updateReview(reviewUpdate);
+
+		var updatedReview = reviewService.updateReview(player, game, reviewRequest.rating(), reviewRequest.comment());
 		return ResponseEntity.ok(ReviewResponse.from(updatedReview));
 	}
 

@@ -2,6 +2,7 @@ package fr.side.projects.steamnuage.services;
 
 import fr.side.projects.steamnuage.controllers.exception.ResourceNotFoundException;
 import fr.side.projects.steamnuage.models.Game;
+import fr.side.projects.steamnuage.models.Player;
 import fr.side.projects.steamnuage.models.Review;
 import fr.side.projects.steamnuage.models.domain.GameReviews;
 import fr.side.projects.steamnuage.repositories.ReviewRepository;
@@ -24,12 +25,13 @@ public class ReviewService {
     return reviewRepository.save(review);
   }
 
-  public Review updateReview(Review reviewUpdate) {
-    Objects.requireNonNull(reviewUpdate);
-    return reviewRepository.findByPlayerAndGame(reviewUpdate.getPlayer(), reviewUpdate.getGame())
+  public Review updateReview(Player player, Game game, int updateRating, String updateComment) {
+    Objects.requireNonNull(game);
+    Objects.requireNonNull(player);
+    return reviewRepository.findByPlayerAndGame(player, game)
         .map(existingReview -> {
-          existingReview.setRating(reviewUpdate.getRating());
-          existingReview.setComment(reviewUpdate.getComment());
+          existingReview.setRating(updateRating);
+          existingReview.setComment(updateComment);
 
           return reviewRepository.save(existingReview);
         })
