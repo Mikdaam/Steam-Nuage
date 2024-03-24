@@ -1,0 +1,21 @@
+FROM eclipse-temurin:21-jdk-alpine
+
+ARG DB_USER
+ARG DB_PASSWORD
+ARG DB_DIALECT
+ARG DB_HOST
+ARG DB_PORT
+ARG DB_NAME
+
+COPY ../target/steam-nuage.jar steam-nuage.jar
+
+EXPOSE 8080
+
+ENV DB_USER ${DB_USER}
+ENV DB_PASSWORD ${DB_PASSWORD}
+ENV DB_DIALECT: ${DB_DIALECT}
+ENV DB_HOST: ${DB_HOST}
+ENV DB_PORT: ${DB_PORT}
+ENV DB_NAME: ${DB_NAME}
+
+CMD ["java", "-jar", "steam-nuage.jar"]
