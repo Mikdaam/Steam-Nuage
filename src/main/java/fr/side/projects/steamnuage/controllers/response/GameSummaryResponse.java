@@ -16,7 +16,6 @@ public record GameSummaryResponse(
     double averageRating,
     String developer,
     String publisher
-
 ) {
   public static GameSummaryResponse from(GameReviews gameReviews) {
     Objects.requireNonNull(gameReviews, "Game can't be null");
