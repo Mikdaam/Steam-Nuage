@@ -22,7 +22,7 @@ public record GameDetailsResponse(
 ) {
   public static GameDetailsResponse from(GameReviews gameReviews, List<Achievement> gameAchievements) {
     Objects.requireNonNull(gameReviews, "Game can't be null");
-    Objects.requireNonNull(gameAchievements, "Achivements can't be null");
+    Objects.requireNonNull(gameAchievements, "Achievements can't be null");
     var game = gameReviews.game();
     var rate = gameReviews.reviews().stream().mapToInt(Review::getRating).average().orElse(0);
     return new GameDetailsResponse(
