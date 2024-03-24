@@ -34,3 +34,6 @@ build/
 
 ### Http tests ###
 endpoints.http
+
+### Docker
+docker/.env
