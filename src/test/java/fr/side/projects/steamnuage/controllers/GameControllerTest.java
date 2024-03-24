@@ -1,10 +1,8 @@
 package fr.side.projects.steamnuage.controllers;
 
 import fr.side.projects.steamnuage.models.Game;
-import fr.side.projects.steamnuage.repositories.AchievementRepository;
 import fr.side.projects.steamnuage.repositories.CompanyRepository;
 import fr.side.projects.steamnuage.repositories.GameRepository;
-import fr.side.projects.steamnuage.repositories.ReviewRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -41,12 +39,6 @@ class GameControllerTest {
 
   @Autowired
   private CompanyRepository companyRepository;
-
-  @Autowired
-  private ReviewRepository reviewRepository;
-
-  @Autowired
-  private AchievementRepository achievementRepository;
 
   @DisplayName("Check listGames (GET)")
   @Test
