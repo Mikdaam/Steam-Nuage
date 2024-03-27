@@ -12,5 +12,7 @@ public interface FriendRepository extends JpaRepository<Friend, FriendId> {
 
   Set<Friend> findByPlayer2(Player player);
 
+  Set<Friend> findByPlayer1OrPlayer2(Player player1, Player player2);
+
   void deleteByPlayer1_UsernameAndPlayer2_Username(String player1, String player2);
 }
