@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -61,13 +62,13 @@ class GameServiceTest {
 
   @Test
   void testRetrieveAll() {
-    when(repository.findAll()).thenReturn(List.of(game1, game2));
+    when(repository.findAll(any(Specification.class))).thenReturn(List.of(game1, game2));
 
-    var results = service.retrieveAll();
+    var results = service.retrieveAll("", "");
 
     assertNotNull(results);
     assertEquals(2, results.size());
-    verify(repository, times(1)).findAll();
+    verify(repository, times(1)).findAll(any(Specification.class));
   }
 
   @Test
