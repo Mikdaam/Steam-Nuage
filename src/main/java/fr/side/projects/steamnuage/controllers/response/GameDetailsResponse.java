@@ -1,6 +1,5 @@
 package fr.side.projects.steamnuage.controllers.response;
 
-import fr.side.projects.steamnuage.models.Achievement;
 import fr.side.projects.steamnuage.models.Review;
 import fr.side.projects.steamnuage.models.domain.GameReviews;
 
@@ -18,13 +17,18 @@ public record GameDetailsResponse(
     double averageRating,
     String developer,
     String publisher,
-    List<AchievementResponse> achievements
+    List<ReviewResponse> tenTopReviews
 ) {
-  public static GameDetailsResponse from(GameReviews gameReviews, List<Achievement> gameAchievements) {
+  public static GameDetailsResponse from(GameReviews gameReviews) {
     Objects.requireNonNull(gameReviews, "Game can't be null");
-    Objects.requireNonNull(gameAchievements, "Achievements can't be null");
     var game = gameReviews.game();
     var rate = gameReviews.reviews().stream().mapToInt(Review::getRating).average().orElse(0);
+    var topReviews = gameReviews.reviews().stream()
+        .filter(review -> review.getRating() >= 4)
+        .limit(10)
+        .map(ReviewResponse::from)
+        .toList();
+
     return new GameDetailsResponse(
         game.getId(),
         game.getTitle(),
@@ -35,7 +39,7 @@ public record GameDetailsResponse(
         rate,
         game.getDeveloper().getName(),
         game.getPublisher().getName(),
-        gameAchievements.stream().map(AchievementResponse::from).toList()
+        topReviews
     );
   }
 }
