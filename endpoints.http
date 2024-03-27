@@ -55,3 +55,6 @@ GET http://localhost:8080/steam-api/players
 
 ### Recuperer un joueur
 GET http://localhost:8080/steam-api/players/gamefan10
+
+### un joueur
+GET http://localhost:8080/api/players/ti
