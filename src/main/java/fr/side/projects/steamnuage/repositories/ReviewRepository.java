@@ -12,5 +12,7 @@ import java.util.Optional;
 public interface ReviewRepository extends JpaRepository<Review, ReviewId> {
   List<Review> findByGame(Game game);
 
+  List<Review> findByPlayer(Player player);
+
   Optional<Review> findByPlayerAndGame(Player player, Game game);
 }

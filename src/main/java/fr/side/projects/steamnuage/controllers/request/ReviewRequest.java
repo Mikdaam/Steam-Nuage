@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ReviewRequest(
-    @NotNull @NotBlank String username,
     @Min(1) @Max(5) int rating,
     @NotNull @NotBlank String comment
 ) {
