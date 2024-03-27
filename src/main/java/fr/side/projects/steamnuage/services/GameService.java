@@ -17,8 +17,14 @@ import java.util.Optional;
 public class GameService {
 	private final GameRepository gameRepository;
 
-	public List<Game> retrieveAll() {
-		return gameRepository.findAll();
+	public List<Game> retrieveAll(String developer, String publisher) {
+		var filterSpecifications = Specifications.filterGames(developer, publisher);
+		return gameRepository.findAll(filterSpecifications);
+	}
+
+	public List<Game> searchGames(String query) {
+		var searchSpecifications = Specifications.searchGames(query);
+		return gameRepository.findAll(searchSpecifications);
 	}
 
 	public Optional<Game> retrieveOne(Long id) {
