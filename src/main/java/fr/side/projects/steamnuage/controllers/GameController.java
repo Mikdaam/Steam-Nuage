@@ -11,6 +11,10 @@ import fr.side.projects.steamnuage.services.AchievementService;
 import fr.side.projects.steamnuage.services.CompanyService;
 import fr.side.projects.steamnuage.services.GameService;
 import fr.side.projects.steamnuage.services.ReviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Objects;
 
+@Tag(name = "Game", description = "Game related resource endpoints")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/games")
@@ -38,6 +43,11 @@ public class GameController {
 	private final ReviewService reviewService;
 	private final AchievementService achievementService;
 
+	@Operation(summary = "List games", description = "Get a list of games with optional filtering by category, publisher, or developer")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "List of games retrieved successfully"),
+			@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
 	@GetMapping
 	public ResponseEntity<List<GameSummaryResponse>> listGames(
 			@RequestParam(required = false) String category,
@@ -52,6 +62,7 @@ public class GameController {
 		return ResponseEntity.ok(res);
 	}
 
+	@Operation(summary = "Search games", description = "Search for games by query string")
 	@GetMapping("/search")
 	public ResponseEntity<List<GameSummaryResponse>> searchGames(@RequestParam("query") String query) {
 		var res = gameService.searchGames(query).stream()
@@ -61,6 +72,11 @@ public class GameController {
 		return ResponseEntity.ok(res);
 	}
 
+	@Operation(summary = "Get game by ID", description = "Retrieve detailed information about a game by its ID")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation"),
+			@ApiResponse(responseCode = "404", description = "Game not found")
+	})
 	@GetMapping("/{gameId}")
 	public ResponseEntity<GameDetailsResponse> getGameById(@PathVariable @Min(1) long gameId) {
 		var game = gameService.retrieveOne(gameId)
@@ -71,6 +87,11 @@ public class GameController {
 		return ResponseEntity.ok(res);
 	}
 
+	@Operation(summary = "List game reviews", description = "List reviews for a specific game by its ID.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation"),
+			@ApiResponse(responseCode = "404", description = "Game not found")
+	})
 	@GetMapping("/{gameId}/reviews")
 	public ResponseEntity<GameReviewsResponse> listGameReviews(@PathVariable @Min(1) long gameId) {
 		var game = gameService.retrieveOne(gameId)
@@ -80,6 +101,11 @@ public class GameController {
 		return ResponseEntity.ok(res);
 	}
 
+	@Operation(summary = "List game achievements", description = "List achievements for a specific game by its ID.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation"),
+			@ApiResponse(responseCode = "404", description = "Game not found")
+	})
 	@GetMapping("/{gameId}/achievements")
 	public ResponseEntity<List<AchievementResponse>> listGameAchievements(@PathVariable @Min(1) long gameId) {
 		var game = gameService.retrieveOne(gameId)
@@ -90,6 +116,7 @@ public class GameController {
 	}
 
 	// =================== Admin Operations [Forbidden for casual users/players] ================
+	@Operation(summary = "Create a game", description = "Create a new game.")
 	@PostMapping
 	public ResponseEntity<GameSummaryResponse> createGame(@RequestBody @Valid GameRequest gameRequest) {
 		Objects.requireNonNull(gameRequest);
@@ -112,6 +139,11 @@ public class GameController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(GameSummaryResponse.from(reviews));
 	}
 
+	@Operation(summary = "Update a game", description = "Update an existing game by its ID.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation"),
+			@ApiResponse(responseCode = "404", description = "Game not found")
+	})
 	@PatchMapping("/{gameId}")
 	public ResponseEntity<GameSummaryResponse> updateGameById(
 			@PathVariable @Min(1) long gameId,
@@ -127,6 +159,11 @@ public class GameController {
 		return ResponseEntity.ok(GameSummaryResponse.from(reviews));
 	}
 
+	@Operation(summary = "Delete a game", description = "Delete a game by its ID.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "204", description = "Game successfully deleted"),
+			@ApiResponse(responseCode = "404", description = "Game not found")
+	})
 	@DeleteMapping("/{gameId}")
 	public ResponseEntity<Void> deleteGameById(@PathVariable @Min(1) long gameId) {
 		gameService.deleteGame(gameId);
