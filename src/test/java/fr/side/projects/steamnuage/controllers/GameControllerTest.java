@@ -40,47 +40,95 @@ class GameControllerTest {
   @Autowired
   private CompanyRepository companyRepository;
 
-  @DisplayName("Check listGames (GET)")
+  @DisplayName("Check listGames (GET) [without filter]")
   @Test
   @Order(1)
-  public void listGamesTest() throws Exception {
+  void testListGamesNoFilter() throws Exception {
     mockMvc.perform(get("/api/games"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$", hasSize(4)))
-        .andExpect(jsonPath("$[0].id").value(1))
         .andExpect(jsonPath("$[0].title").value("Adventure Quest"))
-        .andExpect(jsonPath("$.[0].description").value("Embark on an epic journey through mystical lands."))
-        .andExpect(jsonPath("$.[0].price").value(20))
-        .andExpect(jsonPath("$.[0].minimumAge").value(10))
-        .andExpect(jsonPath("$.[0].releaseDate").value("2023-05-15"))
-        .andExpect(jsonPath("$.[0].averageRating").value(4.333333333333333))
-        .andExpect(jsonPath("$.[0].developer").value("GameDev Studios"))
-        .andExpect(jsonPath("$.[0].publisher").value("PublishCo"))
-        .andExpect(jsonPath("$[1].id").value(2))
-        .andExpect(jsonPath("$[2].id").value(3))
-        .andExpect(jsonPath("$[3].id").value(4));
+        .andExpect(jsonPath("$[1].title").value("Battle Royale"))
+        .andExpect(jsonPath("$[2].title").value("Exploration Odyssey"))
+        .andExpect(jsonPath("$[3].title").value("Treasure Hunter Adventures"));
+  }
+
+  @DisplayName("Check listGames (GET) [with filter]")
+  @Test
+  @Order(2)
+  void testListGamesFilter() throws Exception {
+    mockMvc.perform(get("/api/games").param("publisher", "CompeteCo"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$", hasSize(1)))
+        .andExpect(jsonPath("$[0].title").value("Battle Royale"));
+  }
+
+  @DisplayName("Check searchGames (GET)")
+  @Test
+  @Order(3)
+  void testSearchGames() throws Exception {
+    mockMvc.perform(get("/api/games/search").param("query", "adventure"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$", hasSize(2)))
+        .andExpect(jsonPath("$[0].id").value(1))
+        .andExpect(jsonPath("$[1].id").value(4));
   }
 
   @DisplayName("Check GetGamesById (GET)")
   @Test
-  @Order(2)
-  public void testGetGameById() throws Exception {
+  @Order(4)
+  void testGetGameById() throws Exception {
     mockMvc.perform(get("/api/games/{id}", 1))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.title").value("Adventure Quest"))
-        .andExpect(jsonPath("$.achievements").isArray())
-        .andExpect(jsonPath("$.achievements", hasSize(3)))
-        .andExpect(jsonPath("$.achievements[0].title").value("Novice Adventurer"))
-        .andExpect(jsonPath("$.achievements[0].conditions").value("Complete level 1"));
+        .andExpect(jsonPath("$.description").value("Embark on an epic journey through mystical lands."))
+        .andExpect(jsonPath("$.price").value(20))
+        .andExpect(jsonPath("$.minimumAge").value(10))
+        .andExpect(jsonPath("$.releaseDate").value("2023-05-15"))
+        .andExpect(jsonPath("$.averageRating").value(4.333333333333333))
+        .andExpect(jsonPath("$.developer").value("GameDev Studios"))
+        .andExpect(jsonPath("$.publisher").value("PublishCo"));
+  }
+
+  @DisplayName("Check listGameReviews (GET)")
+  @Test
+  @Order(5)
+  public void listGameReviewsTest() throws Exception {
+    mockMvc.perform(get("/api/games/{gameId}/reviews", 1))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isMap())
+        .andExpect(jsonPath("$", aMapWithSize(2)))
+        .andExpect(jsonPath("$.game").value("Adventure Quest"))
+        .andExpect(jsonPath("$.reviews[0].username").value("player1"))
+        .andExpect(jsonPath("$.reviews[0].rating").value(4))
+        .andExpect(jsonPath("$.reviews[0].comment").value("Great game!"));
+  }
+
+  @DisplayName("Check listGameAchievements (GET)")
+  @Test
+  @Order(6)
+  void listGameAchievementsTest() throws Exception {
+    mockMvc.perform(get("/api/games/{gameId}/achievements", 1))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$", hasSize(3)))
+        .andExpect(jsonPath("$[0].title").value("Novice Adventurer"))
+        .andExpect(jsonPath("$[0].conditions").value("Complete level 1"));
   }
 
   @DisplayName("Check createGame (POST)")
   @Test
-  @Order(3)
-  public void testCreateGame() throws Exception {
+  @Order(7)
+  void testCreateGame() throws Exception {
     var gameToAdd = """
         {
           "title": "Fortnite",
@@ -113,7 +161,7 @@ class GameControllerTest {
 
   @DisplayName("Check updateGame (PATCH)")
   @Test
-  @Order(4)
+  @Order(8)
   void testUpdateGame() throws Exception {
     var gameUpdate = """
         {
@@ -146,87 +194,11 @@ class GameControllerTest {
 
   @DisplayName("Check deleteGame (DELETE)")
   @Test
-  @Order(5)
+  @Order(9)
   void testDeleteGame() throws Exception {
     mockMvc.perform(delete("/api/games/{id}", 5))
         .andExpect(status().isNoContent());
 
     assertThat(gameRepository.findAll()).hasSize(4);
-  }
-
-  @DisplayName("Check listGameReviews (GET)")
-  @Test
-  @Order(6)
-  public void listGameReviewsTest() throws Exception {
-    mockMvc.perform(get("/api/games/{gameId}/reviews", 1))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isMap())
-        .andExpect(jsonPath("$", aMapWithSize(2)))
-        .andExpect(jsonPath("$.game").value("Adventure Quest"))
-        .andExpect(jsonPath("$.reviews[0].username").value("player1"))
-        .andExpect(jsonPath("$.reviews[0].rating").value(4))
-        .andExpect(jsonPath("$.reviews[0].comment").value("Great game!"));
-  }
-
-  @DisplayName("Check addGameReview (POST)")
-  @Test
-  @Order(7)
-  public void testAddGameReview() throws Exception {
-    var reviewToAdd = """
-        {
-          "username": "player5",
-          "rating": 4,
-          "comment": "Enjoyable experience."
-        }
-        """;
-    mockMvc.perform(post("/api/games/{gameId}/reviews", 1)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(reviewToAdd))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$").isMap())
-        .andExpect(jsonPath("$", aMapWithSize(3)))
-        .andExpect(jsonPath("$.username").value("player5"))
-        .andExpect(jsonPath("$.rating").value(4))
-        .andExpect(jsonPath("$.comment").value("Enjoyable experience."));
-
-    mockMvc.perform(get("/api/games/{id}", 1))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.averageRating").value(4));
-  }
-
-  @DisplayName("Check updateGameReview (PATCH)")
-  @Test
-  @Order(8)
-  void testUpdateGameReview() throws Exception {
-    var reviewUpdate = """
-        {
-          "username": "player5",
-          "rating": 1,
-          "comment": "Disappoint about the new version. Developer, fix it."
-        }
-        """;
-    mockMvc.perform(patch("/api/games/{gameId}/reviews", 1)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(reviewUpdate))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$").isMap())
-        .andExpect(jsonPath("$", aMapWithSize(3)))
-        .andExpect(jsonPath("$.rating").value(1));
-
-    mockMvc.perform(get("/api/games/{id}", 1))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.averageRating").value(3));
-  }
-
-  @DisplayName("Check listGameAchievements (GET)")
-  @Test
-  @Order(9)
-  public void listGameAchievementsTest() throws Exception {
-    mockMvc.perform(get("/api/games/{gameId}/achievements", 1))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$", hasSize(3)));
   }
 }

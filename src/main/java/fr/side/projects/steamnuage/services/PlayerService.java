@@ -56,9 +56,9 @@ public class PlayerService {
     var player = playerRepository.findById(username)
         .orElseThrow(() -> new ResourceNotFoundException("Player [" + username + "] doesn't exist"));
     var boughtGames = purchaseRepository.findByPlayer(player).stream().map(Purchase::getGame).toList();
-    var lentGames = loanRepository.findByLender(player).stream().map(Loan::getGame).toList();
-    var borrowedGames = loanRepository.findByBorrower(player).stream().map(Loan::getGame).toList();
-    return Stream.of(boughtGames, lentGames, borrowedGames).flatMap(Collection::stream).collect(Collectors.toSet());
+//    var lentGames = loanRepository.findByLender(player).stream().map(Loan::getGame).toList();
+//    var borrowedGames = loanRepository.findByBorrower(player).stream().map(Loan::getGame).toList();
+    return Stream.of(boughtGames/*, lentGames, borrowedGames*/).flatMap(Collection::stream).collect(Collectors.toSet());
   }
 
   public List<Player> getPlayerFriends(String username) {
