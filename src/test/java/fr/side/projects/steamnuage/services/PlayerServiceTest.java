@@ -1,10 +1,13 @@
 package fr.side.projects.steamnuage.services;
 
 import fr.side.projects.steamnuage.models.Achievement;
+import fr.side.projects.steamnuage.models.Friend;
 import fr.side.projects.steamnuage.models.Game;
+import fr.side.projects.steamnuage.models.Loan;
 import fr.side.projects.steamnuage.models.Player;
 import fr.side.projects.steamnuage.models.Purchase;
 import fr.side.projects.steamnuage.models.Review;
+import fr.side.projects.steamnuage.models.Unlock;
 import fr.side.projects.steamnuage.repositories.AchievementRepository;
 import fr.side.projects.steamnuage.repositories.FriendRepository;
 import fr.side.projects.steamnuage.repositories.GameRepository;
@@ -21,14 +24,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,7 +67,7 @@ class PlayerServiceTest {
 
   @BeforeEach
   void setUp() {
-    testPlayer = new Player("testUser", "password", "Test User", "test@example.com", LocalDate.now(), 100);
+    testPlayer = new Player("testUser", "password", "Test User", "test@example.com", LocalDate.now(), 1000);
     testGame = Game.builder().id(1L).title("Test Game").description("Description").price(1000).minimumAge(12).build();
     testAchievement = Achievement.builder().achievementNo(1L).title("Test Achievement").conditions("Conditions").game(testGame).build();
     testReview = new Review(testPlayer, testGame, 5, "Great game!");
@@ -128,14 +134,15 @@ class PlayerServiceTest {
   @Test
   void testPurchaseGame() {
     when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
-    when(gameRepository.findById(anyLong())).thenReturn(Optional.of(testGame));
+//    when(gameRepository.findById(anyLong())).thenReturn(Optional.of(testGame));
     when(purchaseRepository.save(any(Purchase.class))).thenReturn(new Purchase(testGame, testPlayer));
 
     var result = playerService.purchaseGame("testUser", testGame);
 
     assertEquals(testGame, result);
+    assertEquals(0, testPlayer.getCurrency());
     verify(playerRepository, times(1)).findById("testUser");
-    verify(gameRepository, times(1)).findById(1L);
+//    verify(gameRepository, times(1)).findById(1L);
     verify(purchaseRepository, times(1)).save(any(Purchase.class));
   }
 
@@ -149,5 +156,115 @@ class PlayerServiceTest {
     assertEquals(testReview, result);
     verify(playerRepository, times(1)).findById("testUser");
     verify(reviewRepository, times(1)).save(any(Review.class));
+  }
+
+  @Test
+  void testUpdateReview() {
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+    when(reviewRepository.findByPlayerAndGame(any(Player.class), any(Game.class))).thenReturn(Optional.of(testReview));
+    when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+
+    Review result = playerService.updateReview("testUser", testGame, 4, "Updated review");
+
+    assertNotNull(result);
+    assertEquals(4, result.getRating());
+    assertEquals("Updated review", result.getComment());
+    verify(playerRepository, times(1)).findById("testUser");
+    verify(reviewRepository, times(1)).findByPlayerAndGame(testPlayer, testGame);
+    verify(reviewRepository, times(1)).save(any(Review.class));
+  }
+
+  @Test
+  void testShareGameWithFriend() {
+    Player friend = new Player("friend", "", "", "", LocalDate.now(), 0);
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(friend));
+    when(loanRepository.save(any(Loan.class))).thenReturn(new Loan(testGame, testPlayer, friend));
+
+    var result = playerService.shareGameWithFriend("testUser", testGame, "friend");
+
+    assertNotNull(result);
+    assertEquals(testGame, result.getGame());
+    assertEquals(testPlayer, result.getLender());
+    assertEquals(friend, result.getBorrower());
+    verify(playerRepository, times(2)).findById(anyString());
+    verify(loanRepository, times(1)).save(any(Loan.class));
+  }
+
+  @Test
+  void testUnShareGame() {
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+    when(gameRepository.findById(anyLong())).thenReturn(Optional.of(testGame));
+
+    playerService.unShareGame("testUser", 1L);
+
+    verify(playerRepository, times(1)).findById("testUser");
+    verify(gameRepository, times(1)).findById(1L);
+    verify(loanRepository, times(1)).deleteByLenderAndGame(testPlayer, testGame);
+  }
+
+  @Test
+  void testBeFriendWith() {
+    Player friend = new Player("friend", "", "", "", LocalDate.now(), 0);
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(friend));
+    when(friendRepository.save(any(Friend.class))).thenReturn(new Friend(testPlayer, friend));
+
+    var result = playerService.beFriendWith("testUser", "friend");
+
+    assertNotNull(result);
+    assertEquals(testPlayer, result.getPlayer1());
+    assertEquals(friend, result.getPlayer2());
+    verify(playerRepository, times(2)).findById(anyString());
+    verify(friendRepository, times(1)).save(any(Friend.class));
+  }
+
+  @Test
+  void testUnFriend() {
+    doNothing().when(friendRepository).deleteByPlayer1_UsernameAndPlayer2_Username(anyString(), anyString());
+
+    playerService.unFriend("testUser", "friend");
+
+    verify(friendRepository, times(1)).deleteByPlayer1_UsernameAndPlayer2_Username("testUser", "friend");
+  }
+
+  @Test
+  void testUnlockAchievement() {
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+    when(achievementRepository.findById(anyLong())).thenReturn(Optional.of(testAchievement));
+    when(unlockRepository.save(any(Unlock.class))).thenReturn(new Unlock(testAchievement, testPlayer, LocalDateTime.now()));
+
+    var result = playerService.unlockAchievement("testUser", 1L);
+
+    assertNotNull(result);
+    assertEquals(testAchievement, result);
+    verify(playerRepository, times(1)).findById("testUser");
+    verify(achievementRepository, times(1)).findById(1L);
+    verify(unlockRepository, times(1)).save(any(Unlock.class));
+  }
+
+  /*@Test
+  void testUpdatePlayer() {
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+
+    Player updatedPlayer = new Player("testUser", "newPassword", "Updated User", "updated@example.com", LocalDate.now(), 200);
+    Player result = playerService.updatePlayer("testUser", updatedPlayer);
+
+    assertNotNull(result);
+    assertEquals(updatedPlayer.getPassword(), result.getPassword());
+    assertEquals(updatedPlayer.getFullName(), result.getFullName());
+    assertEquals(updatedPlayer.getEmailAddress(), result.getEmailAddress());
+    assertEquals(updatedPlayer.getDateOfBirth(), result.getDateOfBirth());
+    assertEquals(updatedPlayer.getCurrency(), result.getCurrency());
+    verify(playerRepository, times(1)).findById("testUser");
+  }*/
+
+  @Test
+  void testDeletePlayer() {
+    doNothing().when(playerRepository).deleteById(anyString());
+
+    playerService.deletePlayer("testUser");
+
+    verify(playerRepository, times(1)).deleteById("testUser");
   }
 }
