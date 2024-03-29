@@ -1,5 +1,6 @@
 package fr.side.projects.steamnuage.controllers;
 
+import fr.side.projects.steamnuage.controllers.exception.ErrorResponse;
 import fr.side.projects.steamnuage.controllers.exception.ResourceNotFoundException;
 import fr.side.projects.steamnuage.controllers.request.GameRequest;
 import fr.side.projects.steamnuage.controllers.request.ReviewRequest;
@@ -11,6 +12,12 @@ import fr.side.projects.steamnuage.models.Game;
 import fr.side.projects.steamnuage.services.GameService;
 import fr.side.projects.steamnuage.services.PlayerService;
 import fr.side.projects.steamnuage.services.ReviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -31,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Objects;
 
+@Tag(name = "Player", description = "Player related resource endpoints")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/players")
@@ -39,6 +47,13 @@ public class PlayerController {
   private final ReviewService reviewService;
   private final GameService gameService;
 
+  @Operation(summary = "Purchase a game", description = "Purchase a game by its ID for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Game purchased successfully"),
+      @ApiResponse(responseCode = "404", description = "Game or player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+      )
+  })
   @PostMapping("/{username}/purchase/{gameId}")
   public ResponseEntity<?> purchaseGame(@PathVariable @NotNull @NotBlank String username, @PathVariable @Min(1) long gameId) {
     var gameToBuy = gameService.retrieveOne(gameId)
@@ -47,6 +62,12 @@ public class PlayerController {
     return ResponseEntity.status(HttpStatus.CREATED).body(gameBought);
   }
 
+  @Operation(summary = "Add a game review", description = "Add a review for a game by its ID for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Review added successfully"),
+      @ApiResponse(responseCode = "404", description = "Game or player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("/{username}/review/{gameId}")
   public ResponseEntity<ReviewResponse> addGameReview(
       @PathVariable @NotNull @NotBlank String username,
@@ -60,6 +81,12 @@ public class PlayerController {
     return ResponseEntity.status(HttpStatus.CREATED).body(ReviewResponse.from(review));
   }
 
+  @Operation(summary = "Update a game review", description = "Update a review for a game by its ID for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Review updated successfully"),
+      @ApiResponse(responseCode = "404", description = "Game or player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PatchMapping("/{username}/review/{gameId}")
   public ResponseEntity<ReviewResponse> updateGameReview(
       @PathVariable @NotNull @NotBlank String username,
@@ -73,6 +100,12 @@ public class PlayerController {
     return ResponseEntity.ok(ReviewResponse.from(updatedReview));
   }
 
+  @Operation(summary = "Share a game with a friend", description = "Share a game with a friend by its ID for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Game shared successfully"),
+      @ApiResponse(responseCode = "404", description = "Game or player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("/{username}/share/{gameId}/with/{friend_username}")
   public ResponseEntity<?> shareGameWithAFriend(
       @PathVariable @NotNull @NotBlank String username,
@@ -85,12 +118,24 @@ public class PlayerController {
     return ResponseEntity.status(HttpStatus.CREATED).body(sharing);
   }
 
+  @Operation(summary = "Unshare a game", description = "Unshare a game by its ID for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "Game unshared successfully"),
+      @ApiResponse(responseCode = "404", description = "Game or player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("/{username}/unshare/{gameId}")
   public ResponseEntity<Void> unShareGame(@PathVariable @NotNull @NotBlank String username, @PathVariable @Min(1) long gameId) {
     playerService.unShareGame(username, gameId);
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "Become friends with another player", description = "Become friends with another player by their username for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Friendship established successfully"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("/{username}/befriend/{friend_username}")
   public ResponseEntity<?> beFriend(
       @PathVariable @NotNull @NotBlank String username,
@@ -100,6 +145,12 @@ public class PlayerController {
     return ResponseEntity.ok(friends);
   }
 
+  @Operation(summary = "Unfriend another player", description = "Unfriend another player by their username for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "Unfriendship successful"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("/{username}/unfriend/{friend_username}")
   public ResponseEntity<List<PlayerResponse>> unFriend(
       @PathVariable @NotNull @NotBlank String username,
@@ -109,6 +160,12 @@ public class PlayerController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "Unlock an achievement", description = "Unlock an achievement by its number for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Achievement unlocked successfully"),
+      @ApiResponse(responseCode = "404", description = "Achievement or player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("/{username}/unlock/{achievementNo}")
   public ResponseEntity<?> unlockAnAchievement(
       @PathVariable @NotNull @NotBlank String username,
@@ -118,6 +175,12 @@ public class PlayerController {
     return ResponseEntity.status(HttpStatus.CREATED).body(achievement);
   }
 
+  @Operation(summary = "Get player by username", description = "Retrieve detailed information about a player by their username.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Player details retrieved successfully"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @GetMapping("/{username}")
   public ResponseEntity<PlayerResponse> getPlayerById(@PathVariable String username) {
     var res = playerService.retrieveOne(username)
@@ -125,6 +188,12 @@ public class PlayerController {
     return ResponseEntity.ok(PlayerResponse.from(res));
   }
 
+  @Operation(summary = "Get player's games", description = "Retrieve a list of games owned, lent, or borrowed by a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "List of games retrieved successfully"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @GetMapping("/{username}/games")
   public ResponseEntity<List<GameSummaryResponse>> getPlayerGames(
       @PathVariable @NotNull @NotBlank String username,
@@ -143,6 +212,12 @@ public class PlayerController {
     return ResponseEntity.ok(null);
   }
 
+  @Operation(summary = "Get player's friends", description = "Retrieve a list of friends for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "List of friends retrieved successfully"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @GetMapping("/{username}/friends")
   public ResponseEntity<List<PlayerResponse>> getPlayerFriends(@PathVariable @NotNull @NotBlank String username) {
     var playerFriends = playerService.getPlayerFriends(username);
@@ -151,6 +226,10 @@ public class PlayerController {
   }
 
   // =================== Admin Operations [Forbidden for casual users/players] ================
+  @Operation(summary = "List all players", description = "Retrieve a list of all players.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "List of players retrieved successfully")
+  })
   @GetMapping("")
   public ResponseEntity<List<PlayerResponse>> listPlayers() {
     var res = playerService.retrievesAll().stream()
@@ -159,11 +238,25 @@ public class PlayerController {
     return ResponseEntity.ok(res);
   }
 
+  @Operation(summary = "Create a new player", description = "Create a new player entry.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Player created successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid input",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PostMapping("")
   public ResponseEntity<PlayerResponse> createPlayer(@RequestBody @Valid GameRequest gameRequest) {
     return ResponseEntity.ok(null);
   }
 
+  @Operation(summary = "Update a player", description = "Update an existing player by their username.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Player updated successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid input",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @PatchMapping("/{username}")
   public ResponseEntity<PlayerResponse> updatePlayerById(
       @PathVariable String username,
@@ -173,12 +266,24 @@ public class PlayerController {
     return ResponseEntity.ok(null);
   }
 
+  @Operation(summary = "Delete a player", description = "Delete a player by their username.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "Player successfully deleted"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @DeleteMapping("/{username}")
   public ResponseEntity<Void> deletePlayerById(@PathVariable String username) {
     playerService.deletePlayer(username);
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "Get player's reviews", description = "Retrieve a list of reviews for a specific player.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "List of reviews retrieved successfully"),
+      @ApiResponse(responseCode = "404", description = "Player not found",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+  })
   @GetMapping("/{username}/reviews")
   public ResponseEntity<PlayerReviewsResponse> getPlayerReviews(@PathVariable @NotNull @NotBlank String username) {
     var player = playerService.retrieveOne(username)
