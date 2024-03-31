@@ -17,6 +17,7 @@ import fr.side.projects.steamnuage.repositories.PlayerRepository;
 import fr.side.projects.steamnuage.repositories.PurchaseRepository;
 import fr.side.projects.steamnuage.repositories.ReviewRepository;
 import fr.side.projects.steamnuage.repositories.UnlockRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -116,7 +117,7 @@ public class PlayerService {
     var player = playerRepository.findById(username)
         .orElseThrow(() -> new ResourceNotFoundException("Player [" + username + "] doesn't exist"));
     var friend = playerRepository.findById(friendUsername)
-        .orElseThrow(() -> new ResourceNotFoundException("Player [" + username + "] doesn't exist"));
+        .orElseThrow(() -> new ResourceNotFoundException("Player [" + friendUsername + "] doesn't exist"));
     var loan = Loan.builder()
         .lender(player)
         .borrower(friend)
@@ -126,12 +127,15 @@ public class PlayerService {
     return loanRepository.save(loan);
   }
 
-  public void unShareGame(String username, long gameId) {
+  @Transactional
+  public void unShareGame(String username, long gameId, String friendUsername) {
     var player = playerRepository.findById(username)
         .orElseThrow(() -> new ResourceNotFoundException("Player [" + username + "] doesn't exist"));
+    var friend = playerRepository.findById(friendUsername)
+        .orElseThrow(() -> new ResourceNotFoundException("Player [" + friendUsername + "] doesn't exist"));
     var game = gameRepository.findById(gameId).
         orElseThrow(() -> new ResourceNotFoundException("Game with id[" + gameId + "] doesn't exist"));
-    loanRepository.deleteByLenderAndGame(player, game);
+    loanRepository.deleteByLenderAndGameAndBorrower(player, game, friend);
   }
 
   public Friend beFriendWith(String username, String friendUsername) {
@@ -148,6 +152,7 @@ public class PlayerService {
     return friendRepository.save(friends);
   }
 
+  @Transactional
   public void unFriend(String username, String friendUsername) {
     friendRepository.deleteByPlayer1_UsernameAndPlayer2_Username(username, friendUsername);
   }
@@ -165,10 +170,6 @@ public class PlayerService {
 
     unlockRepository.save(unlock);
     return achievement;
-  }
-
-  public Player updatePlayer(String username, Player update) {
-    return playerRepository.findById(username).orElseThrow(() -> new ResourceNotFoundException("Not Found"));
   }
 
   public void deletePlayer(String username) {
