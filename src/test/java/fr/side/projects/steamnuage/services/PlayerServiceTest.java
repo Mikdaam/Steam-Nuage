@@ -176,7 +176,7 @@ class PlayerServiceTest {
 
   @Test
   void testShareGameWithFriend() {
-    Player friend = new Player("friend", "", "", "", LocalDate.now(), 0);
+    var friend = new Player("friend", "", "", "", LocalDate.now(), 0);
     when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
     when(playerRepository.findById(anyString())).thenReturn(Optional.of(friend));
     when(loanRepository.save(any(Loan.class))).thenReturn(new Loan(testGame, testPlayer, friend));
@@ -193,14 +193,17 @@ class PlayerServiceTest {
 
   @Test
   void testUnShareGame() {
+    var friend = new Player("friend", "", "", "", LocalDate.now(), 0);
     when(playerRepository.findById(anyString())).thenReturn(Optional.of(testPlayer));
+    when(playerRepository.findById(anyString())).thenReturn(Optional.of(friend));
     when(gameRepository.findById(anyLong())).thenReturn(Optional.of(testGame));
+    doNothing().when(loanRepository).deleteByLenderAndGameAndBorrower(any(Player.class), any(Game.class), any(Player.class));
 
-    playerService.unShareGame("testUser", 1L);
+    playerService.unShareGame("testUser", 1L, "friend");
 
     verify(playerRepository, times(1)).findById("testUser");
     verify(gameRepository, times(1)).findById(1L);
-    verify(loanRepository, times(1)).deleteByLenderAndGame(testPlayer, testGame);
+    verify(loanRepository, times(1)).deleteByLenderAndGameAndBorrower(any(Player.class), any(Game.class), any(Player.class));
   }
 
   @Test
