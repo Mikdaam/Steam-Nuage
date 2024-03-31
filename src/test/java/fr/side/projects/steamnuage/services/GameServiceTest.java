@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GameServiceTest {
-
   @Mock
   private GameRepository repository;
 
