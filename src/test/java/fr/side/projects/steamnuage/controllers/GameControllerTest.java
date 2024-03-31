@@ -201,4 +201,35 @@ class GameControllerTest {
 
     assertThat(gameRepository.findAll()).hasSize(4);
   }
+
+  @DisplayName("Check GetGamesById (GET) [Exception]")
+  @Test
+  void testGetGameByIdException() throws Exception {
+    mockMvc.perform(get("/api/games/{id}", 78))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isMap())
+        .andExpect(jsonPath("$", aMapWithSize(3)))
+        .andExpect(jsonPath("$.statusCode").value("404"));
+  }
+
+  @Test
+  public void listGameReviewsException() throws Exception {
+    mockMvc.perform(get("/api/games/{gameId}/reviews", 178))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isMap())
+        .andExpect(jsonPath("$", aMapWithSize(3)))
+        .andExpect(jsonPath("$.statusCode").value("404"));
+  }
+
+  @Test
+  void listGameAchievementsException() throws Exception {
+    mockMvc.perform(get("/api/games/{gameId}/achievements", 178))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isMap())
+        .andExpect(jsonPath("$", aMapWithSize(3)))
+        .andExpect(jsonPath("$.statusCode").value("404"));
+  }
 }
