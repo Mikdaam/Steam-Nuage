@@ -2,13 +2,12 @@ package fr.side.projects.steamnuage.controllers;
 
 import fr.side.projects.steamnuage.controllers.exception.ErrorResponse;
 import fr.side.projects.steamnuage.controllers.exception.ResourceNotFoundException;
-import fr.side.projects.steamnuage.controllers.request.GameRequest;
 import fr.side.projects.steamnuage.controllers.request.ReviewRequest;
+import fr.side.projects.steamnuage.controllers.response.GameDetailsResponse;
 import fr.side.projects.steamnuage.controllers.response.GameSummaryResponse;
 import fr.side.projects.steamnuage.controllers.response.PlayerResponse;
 import fr.side.projects.steamnuage.controllers.response.PlayerReviewsResponse;
 import fr.side.projects.steamnuage.controllers.response.ReviewResponse;
-import fr.side.projects.steamnuage.models.Game;
 import fr.side.projects.steamnuage.services.GameService;
 import fr.side.projects.steamnuage.services.PlayerService;
 import fr.side.projects.steamnuage.services.ReviewService;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -55,11 +53,12 @@ public class PlayerController {
       )
   })
   @PostMapping("/{username}/purchase/{gameId}")
-  public ResponseEntity<?> purchaseGame(@PathVariable @NotNull @NotBlank String username, @PathVariable @Min(1) long gameId) {
+  public ResponseEntity<GameDetailsResponse> purchaseGame(@PathVariable @NotNull @NotBlank String username, @PathVariable @Min(1) long gameId) {
     var gameToBuy = gameService.retrieveOne(gameId)
         .orElseThrow(() -> new ResourceNotFoundException("Game with id[" + gameId + "] doesn't exist"));
     var gameBought = playerService.purchaseGame(username, gameToBuy);
-    return ResponseEntity.status(HttpStatus.CREATED).body(gameBought);
+    var res = reviewService.retrieveReviewsByGame(gameBought);
+    return ResponseEntity.status(HttpStatus.CREATED).body(GameDetailsResponse.from(res));
   }
 
   @Operation(summary = "Add a game review", description = "Add a review for a game by its ID for a specific player.")
@@ -107,7 +106,7 @@ public class PlayerController {
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
   })
   @PostMapping("/{username}/share/{gameId}/with/{friend_username}")
-  public ResponseEntity<?> shareGameWithAFriend(
+  public ResponseEntity<GameSummaryResponse> shareGameWithAFriend(
       @PathVariable @NotNull @NotBlank String username,
       @PathVariable @Min(1) long gameId,
       @PathVariable @NotNull @NotBlank String friend_username
@@ -115,7 +114,8 @@ public class PlayerController {
     var game = gameService.retrieveOne(gameId).
         orElseThrow(() -> new ResourceNotFoundException("Game with id[" + gameId + "] doesn't exist"));
     var sharing = playerService.shareGameWithFriend(username, game, friend_username);
-    return ResponseEntity.status(HttpStatus.CREATED).body(sharing);
+    var res = reviewService.retrieveReviewsByGame(sharing.getGame());
+    return ResponseEntity.status(HttpStatus.CREATED).body(GameSummaryResponse.from(res));
   }
 
   @Operation(summary = "Unshare a game", description = "Unshare a game by its ID for a specific player.")
@@ -124,9 +124,13 @@ public class PlayerController {
       @ApiResponse(responseCode = "404", description = "Game or player not found",
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
   })
-  @PostMapping("/{username}/unshare/{gameId}")
-  public ResponseEntity<Void> unShareGame(@PathVariable @NotNull @NotBlank String username, @PathVariable @Min(1) long gameId) {
-    playerService.unShareGame(username, gameId);
+  @PostMapping("/{username}/unshare/{gameId}/with/{friend_username}")
+  public ResponseEntity<Void> unShareGame(
+      @PathVariable @NotNull @NotBlank String username,
+      @PathVariable @Min(1) long gameId,
+      @PathVariable @NotNull @NotBlank String friend_username
+  ) {
+    playerService.unShareGame(username, gameId, friend_username);
     return ResponseEntity.noContent().build();
   }
 
@@ -137,12 +141,12 @@ public class PlayerController {
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
   })
   @PostMapping("/{username}/befriend/{friend_username}")
-  public ResponseEntity<?> beFriend(
+  public ResponseEntity<PlayerResponse> beFriend(
       @PathVariable @NotNull @NotBlank String username,
       @PathVariable @NotNull @NotBlank String friend_username
   ) {
-    var friends = playerService.beFriendWith(username, friend_username);
-    return ResponseEntity.ok(friends);
+    var newFriend = playerService.beFriendWith(username, friend_username);
+    return ResponseEntity.status(HttpStatus.CREATED).body(PlayerResponse.from(newFriend.getPlayer2()));
   }
 
   @Operation(summary = "Unfriend another player", description = "Unfriend another player by their username for a specific player.")
@@ -196,20 +200,13 @@ public class PlayerController {
   })
   @GetMapping("/{username}/games")
   public ResponseEntity<List<GameSummaryResponse>> getPlayerGames(
-      @PathVariable @NotNull @NotBlank String username,
-      @RequestParam(name = "lent", required = false) String lent,
-      @RequestParam(name = "borrowed", required = false) String borrowed
+      @PathVariable @NotNull @NotBlank String username
   ) {
     var games = playerService.getPlayerGames(username);
     var res = games.stream().map(reviewService::retrieveReviewsByGame)
         .map(GameSummaryResponse::from)
         .toList();
     return ResponseEntity.ok(res);
-  }
-
-  @GetMapping("/{username}/progress")
-  public ResponseEntity<Game> getPlayerGeneralProgress(@PathVariable @NotNull @NotBlank String username) {
-    return ResponseEntity.ok(null);
   }
 
   @Operation(summary = "Get player's friends", description = "Retrieve a list of friends for a specific player.")
@@ -236,34 +233,6 @@ public class PlayerController {
         .map(PlayerResponse::from)
         .toList();
     return ResponseEntity.ok(res);
-  }
-
-  @Operation(summary = "Create a new player", description = "Create a new player entry.")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "201", description = "Player created successfully"),
-      @ApiResponse(responseCode = "400", description = "Invalid input",
-          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-  })
-  @PostMapping("")
-  public ResponseEntity<PlayerResponse> createPlayer(@RequestBody @Valid GameRequest gameRequest) {
-    return ResponseEntity.ok(null);
-  }
-
-  @Operation(summary = "Update a player", description = "Update an existing player by their username.")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Player updated successfully"),
-      @ApiResponse(responseCode = "400", description = "Invalid input",
-          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Player not found",
-          content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-  })
-  @PatchMapping("/{username}")
-  public ResponseEntity<PlayerResponse> updatePlayerById(
-      @PathVariable String username,
-      @RequestBody GameRequest updateRequest
-  ) {
-    Objects.requireNonNull(updateRequest);
-    return ResponseEntity.ok(null);
   }
 
   @Operation(summary = "Delete a player", description = "Delete a player by their username.")

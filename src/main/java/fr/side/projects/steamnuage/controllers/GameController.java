@@ -53,9 +53,8 @@ public class GameController {
 	})
 	@GetMapping
 	public ResponseEntity<List<GameSummaryResponse>> listGames(
-			@RequestParam(required = false) String category,
-			@RequestParam(required = false) String publisher,
-			@RequestParam(required = false) String developer
+			@Parameter(description = "Publisher of the game") @RequestParam(required = false) String publisher,
+			@Parameter(description = "Developer of the game") @RequestParam(required = false) String developer
 	) {
 		var res = gameService.retrieveAll(developer, publisher).stream()
 				.map(reviewService::retrieveReviewsByGame)
