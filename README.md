@@ -1,11 +1,34 @@
-Below is a README for the project:
-
----
-
 # Project: Steam-Nuage
 
-## Summary
+## Running the application in development environment
 
-Cloud is an online video game sales platform designed to facilitate the purchase of games, tracking of player progress,
-and sharing of opinions and comments among players. This project aims to create an efficient and user-friendly platform
-for gamers to discover, purchase, and interact with their favorite games and fellow players.
+### Prerequisites
+
+In order to run, you must fulfill the following requirements:
+
+- Java 21+
+- Maven 3.8+
+- Docker engine 25+
+- Docker Compose 2.23+
+
+### Setting up ENV
+
+> This step needs to be done only once.
+
+First of all, you need to edit the `.env` file inside the `docker` folder to set up your own variable.
+
+### Starting the development environment
+
+In order to start the development environment, you need to start the docker containers using the following command:
+
+```bash
+docker compose -f docker/docker-compose.yml up
+```
+
+To stop id, you need to run:
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+To start the application, it depends on your choice if IDE, refer to its documentation.
